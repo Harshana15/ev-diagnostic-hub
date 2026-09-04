@@ -1,0 +1,10 @@
+﻿.env
+__pycache__/
+*.pyc
+venv/
+data/vector_db/
+data/processed/
+data/features/
+.streamlit/secrets.toml
+BMWi3-owners-manual.pdf
+MEGANE_E_TECH_EV60_220_driv_data.csv
