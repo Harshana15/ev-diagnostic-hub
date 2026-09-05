@@ -1,0 +1,15 @@
+streamlit
+pandas
+numpy
+plotly
+scikit-learn
+joblib
+torch
+sentence-transformers
+chromadb
+langchain
+langchain-community
+langchain-text-splitters
+langchain-google-genai
+python-dotenv
+pypdf
