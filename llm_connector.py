@@ -27,7 +27,7 @@ class LLMConnector:
             google_api_key=api_key,
             temperature=0.1,
             api_version="v1",
-            max_output_tokens=2048
+            max_output_tokens=4096
         )
 
     def get_response(self, final_prompt: str):
@@ -36,7 +36,6 @@ class LLMConnector:
 
             # Send prompt to Gemini
             response = self.model.invoke(final_prompt)
-
             content = response.content
 
             # Gemini/LangChain can return structured content

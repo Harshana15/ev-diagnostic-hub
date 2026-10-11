@@ -549,126 +549,91 @@ def investigate_vehicle(
 # ============================================================
 
 @mcp.tool()
-def ask_diagnostic_question(
-    question: str
-) -> str:
-    """
-    Ask Gemini a grounded diagnostic question using:
-
-    - Renault Megane E-Tech telemetry
-    - Retrieved BMW i3 manual context
-    - Existing PromptOrchestrator
-    """
+def ask_diagnostic_question(question: str) -> str:
+    """Ask Gemini a diagnostic question using telemetry and manual context."""
 
     if not question or not question.strip():
-
         return "Please provide a diagnostic question."
 
     try:
-
         import pandas as pd
-
-        from vector_store import VectorDatabase
-        from embedder import DocumentEmbedder
         from llm_connector import LLMConnector
         from prompt_orchestrator import PromptOrchestrator
 
-        # ----------------------------------------------------
-        # LOAD TELEMETRY
-        # ----------------------------------------------------
-
+        # 1. Load telemetry results
         if not ANOMALY_RESULTS_PATH.exists():
+            return "The telemetry results file was not found."
 
-            return (
-                "The telemetry results file was not found."
-            )
+        df = pd.read_csv(ANOMALY_RESULTS_PATH)
 
-        df = pd.read_csv(
-            ANOMALY_RESULTS_PATH
-        )
-
-        # Only provide the most anomalous records to Gemini.
+        # 2. Select anomalous records
         if "is_anomaly" in df.columns:
-
             anomaly_df = df[
-                df["is_anomaly"] == True
+                df["is_anomaly"].fillna(False).astype(bool)
             ].copy()
-
         else:
-
             anomaly_df = df.copy()
 
+        # 3. Select up to 10 most anomalous records
         if (
             "anomaly_magnitude" in anomaly_df.columns
             and not anomaly_df.empty
         ):
-
             telemetry_context = anomaly_df.sort_values(
                 by="anomaly_magnitude",
                 ascending=True
             ).head(10)
-
         else:
-
             telemetry_context = anomaly_df.head(10)
 
-        # ----------------------------------------------------
-        # RAG SEARCH
-        # ----------------------------------------------------
+        # 4. Calculate full-dataset statistics
+        total_records = len(df)
 
-        vector_db = VectorDatabase(
-            db_path=str(VECTOR_DB_PATH)
-        )
+        if "is_anomaly" in df.columns:
+            anomaly_count = int(
+                df["is_anomaly"].fillna(False).astype(bool).sum()
+            )
+        else:
+            anomaly_count = 0
 
-        embedder = DocumentEmbedder(
-            model_name="all-MiniLM-L6-v2"
-        )
+        telemetry_summary = {
+            "total_records": total_records,
+            "potential_anomalies": anomaly_count,
+            "anomaly_percentage": (
+                round(anomaly_count / total_records * 100, 2)
+                if total_records > 0 else 0
+            ),
+        }
 
-        query_embedding = embedder.embed_query(
-            question.strip()
-        )
+        # 5. Retrieve manual context using cached components
+        vector_db, embedder = get_rag_components()
+        query_embedding = embedder.embed_query(question.strip())
 
         manual_context = vector_db.query(
             query_embedding,
             n_results=3
         )
 
-        # ----------------------------------------------------
-        # PROMPT
-        # ----------------------------------------------------
-
+        # 6. Build the diagnostic prompt
         orchestrator = PromptOrchestrator()
 
         final_prompt = orchestrator.create_diagnostic_prompt(
             user_question=question.strip(),
             telemetry_context=telemetry_context,
-            manual_context=manual_context
+            manual_context=manual_context,
+            telemetry_summary=telemetry_summary
         )
 
-        # ----------------------------------------------------
-        # GEMINI
-        # ----------------------------------------------------
-
+        # 7. Ask Gemini
         connector = LLMConnector()
-
-        answer = connector.get_response(
-            final_prompt
-        )
+        answer = connector.get_response(final_prompt)
 
         return str(answer)
 
     except Exception as e:
-
         return (
             "Diagnostic question failed.\n"
-            f"Error: {str(e)}"
+            f"Error: {e}"
         )
-
-
-# ============================================================
-# START MCP SERVER
-# ============================================================
-
 if __name__ == "__main__":
-
     mcp.run()
