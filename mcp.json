@@ -1,0 +1,24 @@
+{
+  "mcpServers": {
+    "ev-diagnostic-hub": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--with",
+        "mcp==2.2.0",
+        "--with",
+        "pandas==3.0.5",
+        "--with",
+        "chromadb==1.5.9",
+        "--with",
+        "sentence-transformers==6.0.0",
+        "--with",
+        "torch==2.13.0",
+        "mcp",
+        "run",
+        "mcp_server.py"
+      ],
+      "connectionTimeout": 120000
+    }
+  }
+}
