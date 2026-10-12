@@ -87,6 +87,40 @@ The application provides:
 - Technical-document RAG interface
 - AI-assisted diagnostic responses
 
+## MCP Integration
+
+The EV Diagnostic Hub exposes its diagnostic capabilities through the Model Context Protocol (MCP), allowing compatible MCP clients to interact with the telemetry analysis and technical-document retrieval pipeline.
+
+### Available MCP Tools
+
+- `get_vehicle_summary` — Returns a high-level overview of the diagnostic system.
+- `detect_vehicle_anomalies` - Reports the total telemetry records, potential anomalies, and anomaly percentage.
+- `search_technical_manual` - Searches the indexed technical manual using semantic retrieval.
+- `investigate_vehicle` - Combines telemetry anomaly analysis with relevant technical-document evidence.
+- `ask_diagnostic_question` - Uses Google Gemini to generate an evidence-grounded response from telemetry and retrieved manual context.
+
+### Setup and Testing
+
+1. Create and activate a Python virtual environment.
+2. Install the dependencies listed in `requirements.txt`.
+3. Configure the Google Gemini API key in the local `.env` file, following the configuration expected by `llm_connector.py`.
+4. Ensure the processed telemetry results and persistent ChromaDB vector database have been generated or are available locally.
+5. Start the MCP Inspector with:
+
+   ```powershell
+   mcp dev mcp_server.py
+   ```
+
+6. Connect to the server and test the available tools in the Inspector.
+
+Do not commit API keys, `.env` files, or generated data and model artifacts unless the project explicitly requires them.
+
+### MCP Diagnostic Limitations
+
+The current telemetry dataset represents a Renault Megane E-Tech, while the indexed technical manual is for a BMW i3. Retrieved BMW documentation is not vehicle-specific guidance for the Renault dataset.
+
+Anomaly detection identifies unusual statistical patterns; it does not independently establish a physical fault. Likewise, high current or calculated power loss alone does not confirm battery overheating without supporting temperature evidence.
+
 ##  Tech Stack
 
 **Python | Pandas | NumPy | Scikit-learn | LangChain | Sentence Transformers | ChromaDB | Google Gemini | Streamlit | Plotly**
